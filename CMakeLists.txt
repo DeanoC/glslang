@@ -1,151 +1,153 @@
-# increase to 3.1 once all major distributions
-# include a version of CMake >= 3.1
-cmake_minimum_required(VERSION 2.8.12)
-if (POLICY CMP0048)
-  cmake_policy(SET CMP0048 NEW)
-endif()
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+get_directory_property(hasParent PARENT_DIRECTORY)
+if (NOT hasParent)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/out_libs)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/out_bin)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/out_bin)
+    set(LIB_BASE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/src/libs/)
+    include(FetchContent)
+    FetchContent_Declare(al2o3 GIT_REPOSITORY https://github.com/DeanoC/al2o3 GIT_TAG master)
+    FetchContent_GetProperties(al2o3)
+    if (NOT al2o3_POPULATED)
+        FetchContent_Populate(al2o3)
+        add_subdirectory(${al2o3_SOURCE_DIR} ${al2o3_BINARY_DIR})
+    endif ()
+endif ()
 
-# Adhere to GNU filesystem layout conventions
-include(GNUInstallDirs)
+SET_MIN_VERSIONS()
+set(LibName gfx_glslang)
 
-option(BUILD_SHARED_LIBS "Build Shared Libraries" OFF)
+set(Interface
+        ../glslang/Public/ShaderLang.h
+        )
 
-set(LIB_TYPE STATIC)
+set(Src
+#        glslang/MachineIndependent/glslang.y
+        glslang/MachineIndependent/glslang_tab.cpp
+        glslang/MachineIndependent/attribute.cpp
+        glslang/MachineIndependent/Constant.cpp
+        glslang/MachineIndependent/iomapper.cpp
+        glslang/MachineIndependent/InfoSink.cpp
+        glslang/MachineIndependent/Initialize.cpp
+        glslang/MachineIndependent/IntermTraverse.cpp
+        glslang/MachineIndependent/Intermediate.cpp
+        glslang/MachineIndependent/ParseContextBase.cpp
+        glslang/MachineIndependent/ParseHelper.cpp
+        glslang/MachineIndependent/PoolAlloc.cpp
+        glslang/MachineIndependent/RemoveTree.cpp
+        glslang/MachineIndependent/Scan.cpp
+        glslang/MachineIndependent/ShaderLang.cpp
+        glslang/MachineIndependent/SymbolTable.cpp
+        glslang/MachineIndependent/Versions.cpp
+        glslang/MachineIndependent/intermOut.cpp
+        glslang/MachineIndependent/limits.cpp
+        glslang/MachineIndependent/linkValidate.cpp
+        glslang/MachineIndependent/parseConst.cpp
+        glslang/MachineIndependent/reflection.cpp
+        glslang/MachineIndependent/preprocessor/Pp.cpp
+        glslang/MachineIndependent/preprocessor/PpAtom.cpp
+        glslang/MachineIndependent/preprocessor/PpContext.cpp
+        glslang/MachineIndependent/preprocessor/PpScanner.cpp
+        glslang/MachineIndependent/preprocessor/PpTokens.cpp
+        glslang/MachineIndependent/propagateNoContraction.cpp
+        glslang/GenericCodeGen/CodeGen.cpp
+        glslang/GenericCodeGen/Link.cpp
+        SPIRV/GlslangToSpv.cpp
+        SPIRV/InReadableOrder.cpp
+        SPIRV/Logger.cpp
+        SPIRV/SpvBuilder.cpp
+        SPIRV/SpvPostProcess.cpp
+        SPIRV/doc.cpp
+        SPIRV/SpvTools.cpp
+        SPIRV/disassemble.cpp
+        SPIRV/SPVRemapper.cpp
+        SPIRV/doc.cpp
+        hlsl/hlslAttributes.cpp
+        hlsl/hlslParseHelper.cpp
+        hlsl/hlslScanContext.cpp
+        hlsl/hlslOpMap.cpp
+        hlsl/hlslTokenStream.cpp
+        hlsl/hlslGrammar.cpp
+        hlsl/hlslParseables.cpp
 
-if(BUILD_SHARED_LIBS)
-    set(LIB_TYPE SHARED)
-endif()
+        glslang/Include/arrays.h
+        glslang/Include/BaseTypes.h
+        glslang/Include/Common.h
+        glslang/Include/ConstantUnion.h
+        glslang/Include/InfoSink.h
+        glslang/Include/InitializeGlobals.h
+        glslang/Include/intermediate.h
+        glslang/Include/PoolAlloc.h
+        glslang/Include/ResourceLimits.h
+        glslang/Include/revision.h
+        glslang/Include/ShHandle.h
+        glslang/Include/Types.h
+        glslang/MachineIndependent/attribute.h
+        glslang/MachineIndependent/glslang_tab.cpp.h
+        glslang/MachineIndependent/gl_types.h
+        glslang/MachineIndependent/Initialize.h
+        glslang/MachineIndependent/iomapper.h
+        glslang/MachineIndependent/LiveTraverser.h
+        glslang/MachineIndependent/localintermediate.h
+        glslang/MachineIndependent/ParseHelper.h
+        glslang/MachineIndependent/reflection.h
+        glslang/MachineIndependent/RemoveTree.h
+        glslang/MachineIndependent/Scan.h
+        glslang/MachineIndependent/ScanContext.h
+        glslang/MachineIndependent/SymbolTable.h
+        glslang/MachineIndependent/Versions.h
+        glslang/MachineIndependent/parseVersions.h
+        glslang/MachineIndependent/propagateNoContraction.h
+        glslang/MachineIndependent/preprocessor/PpContext.h
+        glslang/MachineIndependent/preprocessor/PpTokens.h
+        glslang/OSDependent/osinclude.h
+        SPIRV/bitutils.h
+        SPIRV/spirv.hpp
+        SPIRV/GLSL.std.450.h
+        SPIRV/GLSL.ext.EXT.h
+        SPIRV/GLSL.ext.KHR.h
+        SPIRV/GlslangToSpv.h
+        SPIRV/hex_float.h
+        SPIRV/Logger.h
+        SPIRV/SpvBuilder.h
+        SPIRV/spvIR.h
+        SPIRV/doc.h
+        SPIRV/SpvTools.h
+        SPIRV/disassemble.h
+        SPIRV/SPVRemapper.h
+        SPIRV/doc.h
+        SPIRV/GLSL.ext.AMD.h
+        SPIRV/GLSL.ext.NV.h
+        hlsl/hlslAttributes.h
+        hlsl/hlslParseHelper.h
+        hlsl/hlslTokens.h
+        hlsl/hlslScanContext.h
+        hlsl/hlslOpMap.h
+        hlsl/hlslTokenStream.h
+        hlsl/hlslGrammar.h
+        hlsl/hlslParseables.h
 
-option(SKIP_GLSLANG_INSTALL "Skip installation" ${SKIP_GLSLANG_INSTALL})
-if(NOT ${SKIP_GLSLANG_INSTALL})
-  set(ENABLE_GLSLANG_INSTALL ON)
-endif()
-option(ENABLE_SPVREMAPPER "Enables building of SPVRemapper" ON)
+        )
 
-option(ENABLE_AMD_EXTENSIONS "Enables support of AMD-specific extensions" ON)
-option(ENABLE_GLSLANG_BINARIES "Builds glslangValidator and spirv-remap" ON)
-
-option(ENABLE_NV_EXTENSIONS "Enables support of Nvidia-specific extensions" ON)
-
-option(ENABLE_HLSL "Enables HLSL input support" ON)
-
-option(ENABLE_OPT "Enables spirv-opt capability if present" ON)
-
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND WIN32)
-    set(CMAKE_INSTALL_PREFIX "install" CACHE STRING "..." FORCE)
-endif()
-
-option(USE_CCACHE "Use ccache" OFF)
-if(USE_CCACHE)
-    find_program(CCACHE_FOUND ccache)
-    if(CCACHE_FOUND)
-        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-    endif(CCACHE_FOUND)
-endif()
-
-# Precompiled header macro. Parameters are source file list and filename for pch cpp file.
-macro(glslang_pch SRCS PCHCPP)
-  if(MSVC AND CMAKE_GENERATOR MATCHES "^Visual Studio")
-    set(PCH_NAME "$(IntDir)\\pch.pch")
-    # make source files use/depend on PCH_NAME
-    set_source_files_properties(${${SRCS}} PROPERTIES COMPILE_FLAGS "/Yupch.h /FIpch.h /Fp${PCH_NAME} /Zm300" OBJECT_DEPENDS "${PCH_NAME}")
-    # make PCHCPP file compile and generate PCH_NAME
-    set_source_files_properties(${PCHCPP} PROPERTIES COMPILE_FLAGS "/Ycpch.h /Fp${PCH_NAME} /Zm300" OBJECT_OUTPUTS "${PCH_NAME}")
-    list(APPEND ${SRCS} "${PCHCPP}")
-  endif()
-endmacro(glslang_pch)
-
-project(glslang)
-# make testing optional
-include(CTest)
-
-if(ENABLE_AMD_EXTENSIONS)
-    add_definitions(-DAMD_EXTENSIONS)
-endif(ENABLE_AMD_EXTENSIONS)
-
-if(ENABLE_NV_EXTENSIONS)
-    add_definitions(-DNV_EXTENSIONS)
-endif(ENABLE_NV_EXTENSIONS)
-
-if(ENABLE_HLSL)
-    add_definitions(-DENABLE_HLSL)
-endif(ENABLE_HLSL)
 
 if(WIN32)
-    set(CMAKE_DEBUG_POSTFIX "d")
-    if(MSVC)
-        include(ChooseMSVCCRT.cmake)
-    endif(MSVC)
+    list(APPEND Src glslang/OSDependent/Windows/ossource.cpp)
     add_definitions(-DGLSLANG_OSINCLUDE_WIN32)
-elseif(UNIX)
+else()
+    list(APPEND Src glslang/OSDependent/Unix/ossource.cpp)
     add_definitions(-DGLSLANG_OSINCLUDE_UNIX)
-else(WIN32)
-    message("unknown platform")
-endif(WIN32)
-
-if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
-    add_compile_options(-Wall -Wmaybe-uninitialized -Wuninitialized -Wunused -Wunused-local-typedefs
-                        -Wunused-parameter -Wunused-value  -Wunused-variable -Wunused-but-set-parameter -Wunused-but-set-variable -fno-exceptions)
-    add_compile_options(-Wno-reorder)  # disable this from -Wall, since it happens all over.
-elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-    add_compile_options(-Wall -Wuninitialized -Wunused -Wunused-local-typedefs
-                        -Wunused-parameter -Wunused-value  -Wunused-variable)
-    add_compile_options(-Wno-reorder)  # disable this from -Wall, since it happens all over.
 endif()
 
-# Request C++11
-if(${CMAKE_VERSION} VERSION_LESS 3.1)
-    # CMake versions before 3.1 do not understand CMAKE_CXX_STANDARD
-    # remove this block once CMake >=3.1 has fixated in the ecosystem
-    add_compile_options(-std=c++11)
-else()
-    set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_CXX_EXTENSIONS OFF)
-endif()
+set(Deps
+        gfx_spirvtools)
 
-add_compile_options(-fno-rtti)
+ADD_LIB(${LibName} "${Interface}" "${Src}" "${Deps}")
+target_include_directories(${LibName} PUBLIC src) # public for shaderc
 
-function(glslang_set_link_args TARGET)
-    # For MinGW compiles, statically link against the GCC and C++ runtimes.
-    # This avoids the need to ship those runtimes as DLLs.
-    if(WIN32 AND ${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
-        set_target_properties(${TARGET} PROPERTIES
-                              LINK_FLAGS "-static -static-libgcc -static-libstdc++")
-    endif()
-endfunction(glslang_set_link_args)
+target_compile_definitions(${LibName}
+        PUBLIC
+        AMD_EXTENSIONS
+        NV_EXTENSIONS
+        ENABLE_HLSL
+        ENABLE_OPT=1)
 
-# CMake needs to find the right version of python, right from the beginning,
-# otherwise, it will find the wrong version and fail later
-if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/External)
-    find_package(PythonInterp 3 REQUIRED)
-endif()
-
-# We depend on these for later projects, so they should come first.
-add_subdirectory(External)
-
-if(NOT TARGET SPIRV-Tools-opt)
-    set(ENABLE_OPT OFF)
-endif()
-
-if(ENABLE_OPT)
-    message(STATUS "optimizer enabled")
-    add_definitions(-DENABLE_OPT=1)
-else()
-    if(ENABLE_HLSL)
-        message(STATUS "spirv-tools not linked - illegal SPIRV may be generated for HLSL")
-    endif()
-    add_definitions(-DENABLE_OPT=0)
-endif()
-
-add_subdirectory(glslang)
-add_subdirectory(OGLCompilersDLL)
-if(ENABLE_GLSLANG_BINARIES)
-    add_subdirectory(StandAlone)
-endif()
-add_subdirectory(SPIRV)
-if(ENABLE_HLSL)
-    add_subdirectory(hlsl)
-endif(ENABLE_HLSL)
-add_subdirectory(gtests)
