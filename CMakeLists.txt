@@ -126,7 +126,7 @@ set(Src
         hlsl/hlslTokenStream.h
         hlsl/hlslGrammar.h
         hlsl/hlslParseables.h
-        OGLCOmpilersDLL/InitializeDll.cpp
+        OGLCompilersDLL/InitializeDll.cpp
 
         )
 
